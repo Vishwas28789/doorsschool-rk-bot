@@ -1,0 +1,6 @@
+@echo off
+echo Starting Doorsschool RK Bot...
+start cmd /k "node server.js"
+timeout /t 3
+echo Getting your live public link...
+ngrok http 3000

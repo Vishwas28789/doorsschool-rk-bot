@@ -1,0 +1,14 @@
+2026/05/09-23:22:10.992 4518 Creating DB C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb since it was missing.
+2026/05/09-23:22:11.006 4518 Reusing MANIFEST C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/05/09-23:22:11.007 4518 Recovering log #196
+2026/05/09-23:22:11.013 4518 Reusing old log C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\IndexedDB\https_web.whatsapp.com_0.indexeddb.leveldb/000196.log 
+2026/05/09-23:22:11.014 4518 Delete type=2 #195
+2026/05/09-23:22:11.015 4518 Delete type=2 #198
+2026/05/09-23:22:12.468 5d8c Manual compaction at level-0 from '\x00\x09\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0a\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/09-23:22:12.474 5d8c Manual compaction at level-0 from '\x00\x0d\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0e\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/09-23:22:12.506 5d8c Manual compaction at level-0 from '\x00\x04\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x05\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/09-23:22:12.508 5d8c Manual compaction at level-0 from '\x00\x07\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x08\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/05/09-23:22:12.509 5d8c Level-0 table #198: started
+2026/05/09-23:22:12.519 5d8c Level-0 table #198: 165993 bytes OK
+2026/05/09-23:22:12.522 5d8c Delete type=0 #196
+2026/05/09-23:22:12.523 3774 Manual compaction at level-0 from '\x00\x0a\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x0b\x00\x00\x00' @ 0 : 0; will stop at (end)

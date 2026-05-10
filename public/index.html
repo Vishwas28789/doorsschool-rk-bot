@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp - Doorsschool</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Panel -->
+        <div class="side-panel">
+            <div class="header">
+                <img src="https://ui-avatars.com/api/?name=RK&background=25D366&color=fff" alt="Avatar" class="profile-pic">
+                <div class="header-icons">
+                    <i class="fas fa-circle-notch"></i>
+                    <i class="fas fa-comment-alt"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search or start new chat">
+                </div>
+            </div>
+            <div class="chat-list">
+                <div class="chat-item active">
+                    <img src="https://ui-avatars.com/api/?name=RK&background=25D366&color=fff" alt="RK" class="chat-pic">
+                    <div class="chat-info">
+                        <div class="chat-name">Doorsschool (RK)</div>
+                        <div class="chat-last-msg">Online</div>
+                    </div>
+                    <div class="chat-meta">
+                        <div class="time">12:00 PM</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <div class="main-chat">
+            <div class="chat-header">
+                <div class="user-info">
+                    <img src="https://ui-avatars.com/api/?name=RK&background=25D366&color=fff" alt="RK" class="profile-pic">
+                    <div class="status-info">
+                        <div class="name">Doorsschool (RK)</div>
+                        <div class="status">online <span class="dot"></span></div>
+                    </div>
+                </div>
+                <div class="header-icons">
+                    <button id="newChatBtn">New Chat</button>
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-paperclip"></i>
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+
+            <div class="message-area" id="message-area">
+                <!-- Messages will appear here -->
+            </div>
+
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="bubble">
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                    <span class="dot"></span>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <i class="far fa-smile"></i>
+                <input type="text" id="message-input" placeholder="Type a message">
+                <button id="send-btn"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

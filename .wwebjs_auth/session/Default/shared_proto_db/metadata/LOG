@@ -1,0 +1,4 @@
+2026/05/09-23:22:09.561 512c Creating DB C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\shared_proto_db\metadata since it was missing.
+2026/05/09-23:22:09.577 512c Reusing MANIFEST C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\shared_proto_db\metadata/MANIFEST-000001
+2026/05/09-23:22:09.577 512c Recovering log #3
+2026/05/09-23:22:09.578 512c Reusing old log C:\Users\vishw\OneDrive\Desktop\BOT1\.wwebjs_auth\session\Default\shared_proto_db\metadata/000003.log 

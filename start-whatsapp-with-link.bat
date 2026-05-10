@@ -1,0 +1,6 @@
+@echo off
+echo Starting Doorsschool RK Bot on WhatsApp...
+start cmd /k "node index.js"
+timeout /t 3
+echo Getting your live public link...
+ngrok http 3000

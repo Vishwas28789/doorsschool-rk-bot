@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: doorsschool-rk-bot
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false
+      - key: WEBINAR_LINK
+        sync: false
+      - key: NODE_ENV
+        value: production
