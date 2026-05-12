@@ -9,6 +9,9 @@ const knowledgeBase = require('./knowledge_base');
 const sandbox = require('./sandbox');
 const fs = require('fs');
 const dotenv = require('dotenv');
+const session = require('express-session');
+
+
 
 
 const app = express();
@@ -20,28 +23,50 @@ const TEST_USER = "test_user_001";
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// ADMIN PROTECTION MIDDLEWARE
-app.use('/admin', (req, res, next) => {
-    // Skip protection for the static admin.html page itself if you want, 
-    // but the prompt says "for all /admin routes".
-    const auth = req.headers.authorization;
-    if (!auth) {
-        res.setHeader('WWW-Authenticate', 'Basic');
-        return res.status(401).send('Access denied');
+// SESSION SETUP
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'rk-admin-secret',
+    resave: false,
+    saveUninitialized: false,
+    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+}));
+
+// AUTH MIDDLEWARE
+function requireAdmin(req, res, next) {
+    if (req.session && req.session.isAdmin) {
+        return next();
     }
-    const [user, pass] = Buffer.from(
-        auth.split(' ')[1], 'base64'
-    ).toString().split(':');
-    if (pass !== process.env.ADMIN_PASSWORD) {
-        return res.status(403).send('Wrong password');
-    }
-    next();
+    res.redirect('/admin/login');
+}
+
+// LOGIN ROUTES (NOT PROTECTED)
+app.get('/admin/login', (req, res) => {
+    res.sendFile(__dirname + '/admin-login.html');
 });
+
+app.post('/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === "admin" && password === process.env.ADMIN_PASSWORD) {
+        req.session.isAdmin = true;
+        return res.redirect('/admin');
+    }
+    res.redirect('/admin/login?error=1');
+});
+
+app.get('/admin/logout', (req, res) => {
+    req.session.destroy();
+    res.redirect('/admin/login');
+});
+
+// APPLY PROTECTION TO ALL /admin ROUTES (except login)
+app.use('/admin', requireAdmin);
 
 app.get('/admin', (req, res) => {
     res.sendFile(__dirname + '/admin.html');
 });
+
 
 
 app.post('/reset', (req, res) => {
