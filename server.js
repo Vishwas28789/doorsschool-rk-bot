@@ -14,16 +14,11 @@ const MongoStore = require('connect-mongo');
 const connectDB = require('./db');
 
 dotenv.config();
-connectDB();
-
-
-
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-const PORT = process.env.PORT || 3000;
 const TEST_USER = "test_user_001";
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -31,15 +26,20 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // SESSION SETUP
+const mongoStore = process.env.MONGODB_URI 
+  ? MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 24 * 60 * 60,
+      touchAfter: 24 * 3600
+    })
+  : null;
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'rk-admin-secret',
-    resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI,
-        ttl: 24 * 60 * 60
-    }),
-    cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
+  secret: process.env.SESSION_SECRET || 'rk-secret-fallback',
+  resave: false,
+  saveUninitialized: false,
+  store: mongoStore || undefined,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
 // AUTH MIDDLEWARE
@@ -251,7 +251,18 @@ app.post('/admin/api/settings/update', (req, res) => {
     res.json({ success: true });
 });
 
-server.listen(PORT, () => {
-
+const startServer = async () => {
+  try {
+    await connectDB();
+    console.log('MongoDB connected successfully');
+  } catch (err) {
+    console.log('MongoDB failed, running without DB:', err.message);
+  }
+  
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
     console.log(`WhatsApp Test UI running at http://localhost:${PORT}`);
-});
+  });
+};
+
+startServer();

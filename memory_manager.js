@@ -1,7 +1,32 @@
+const mongoose = require('mongoose');
 const SessionModel = require('./models/Session');
 
+function isDBConnected() {
+  return mongoose.connection.readyState === 1;
+}
+
 class MemoryManager {
+  constructor() {
+    this.localSessions = new Map();
+  }
+
   async getSession(userId) {
+    if (!isDBConnected()) {
+      if (!this.localSessions.has(userId)) {
+        this.localSessions.set(userId, { 
+          userId, 
+          name: 'Unknown',
+          profession: 'Unknown',
+          pain: 'Unknown',
+          goal: 'Unknown',
+          stage: 1, 
+          interestLevel: 'low',
+          history: [] 
+        });
+      }
+      return this.localSessions.get(userId);
+    }
+
     let session = await SessionModel.findOne({ userId });
     if (!session) {
       session = await SessionModel.create({ 
@@ -19,8 +44,12 @@ class MemoryManager {
   }
 
   async updateSession(userId, updates) {
-    // Map old field names to new if necessary, or just use updates
-    // The model uses lowercase fields: name, profession, pain, goal, stage, interestLevel
+    if (!isDBConnected()) {
+      const session = await this.getSession(userId);
+      Object.assign(session, updates);
+      return session;
+    }
+
     const mappedUpdates = {};
     if (updates.NAME) mappedUpdates.name = updates.NAME;
     if (updates.PROFESSION) mappedUpdates.profession = updates.PROFESSION;
@@ -39,7 +68,13 @@ class MemoryManager {
   }
 
   async addToHistory(userId, role, content) {
-    // Map 'rk' role to 'assistant' for the model
+    if (!isDBConnected()) {
+      const session = await this.getSession(userId);
+      session.history.push({ role: role === 'rk' ? 'assistant' : role, content, timestamp: new Date() });
+      if (session.history.length > 6) session.history = session.history.slice(-6);
+      return session;
+    }
+
     const mappedRole = role === 'rk' ? 'assistant' : role;
     
     return await SessionModel.findOneAndUpdate(
@@ -55,19 +90,29 @@ class MemoryManager {
   }
 
   async getHistory(userId) {
+    if (!isDBConnected()) {
+      const session = await this.getSession(userId);
+      return session.history.slice(-6).map(h => ({
+        role: h.role === 'assistant' ? 'rk' : h.role,
+        content: h.content
+      }));
+    }
+
     const session = await SessionModel.findOne({ userId });
     if (!session) return [];
     return session.history.slice(-6).map(h => ({
-      role: h.role === 'assistant' ? 'rk' : h.role, // Map back for logic compatibility
+      role: h.role === 'assistant' ? 'rk' : h.role,
       content: h.content
     }));
   }
 
   async getCompressedContext(userId) {
     const session = await this.getSession(userId);
+    const history = !isDBConnected() ? session.history : session.history.toObject();
+    
     return {
       summary: session.summary || "New user.",
-      recentMessages: session.history.slice(-4).map(h => ({
+      recentMessages: history.slice(-4).map(h => ({
         role: h.role === 'assistant' ? 'rk' : h.role,
         content: h.content
       })),
@@ -78,6 +123,11 @@ class MemoryManager {
   }
 
   async clearSession(userId) {
+    if (!isDBConnected()) {
+      this.localSessions.delete(userId);
+      return;
+    }
+
     return await SessionModel.findOneAndUpdate(
       { userId },
       { 
@@ -89,21 +139,24 @@ class MemoryManager {
   }
 
   async getAllSessions() {
+    if (!isDBConnected()) {
+      return Array.from(this.localSessions.values());
+    }
     return await SessionModel.find().sort({ lastActive: -1 });
   }
 
-  // Support for methods used in bot_logic.js
   async getOrCreateSession(userId) {
     const session = await this.getSession(userId);
-    // Return with uppercase keys for compatibility with bot_logic.js if needed
+    const sessionObj = !isDBConnected() ? session : session.toObject();
+    
     return {
-        ...session.toObject(),
-        NAME: session.name,
-        PROFESSION: session.profession,
-        PAIN: session.pain,
-        GOAL: session.goal,
-        STAGE: session.stage,
-        INTEREST_LEVEL: session.interestLevel
+        ...sessionObj,
+        NAME: sessionObj.name,
+        PROFESSION: sessionObj.profession,
+        PAIN: sessionObj.pain,
+        GOAL: sessionObj.goal,
+        STAGE: sessionObj.stage,
+        INTEREST_LEVEL: sessionObj.interestLevel
     };
   }
 
