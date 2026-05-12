@@ -2,6 +2,10 @@ require('dotenv').config();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Groq = require('groq-sdk');
 const memoryManager = require('./memory_manager');
+const logger = require('./logger');
+const knowledgeBase = require('./knowledge_base');
+
+
 
 // Initialize APIs
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -141,7 +145,12 @@ async function getRkResponse(userId, userMessage) {
     const isFirstMessage = session.history.length <= 1;
     const activePrompt = isFirstMessage ? FULL_SYSTEM_PROMPT : COMPRESSED_PROMPT;
     
-    const finalSystemPrompt = `${activePrompt}\n\n${systemNote}`;
+    // INJECT KNOWLEDGE BASE
+    const liveKnowledge = knowledgeBase.getLiveContext();
+    const knowledgeSuffix = liveKnowledge ? `\n\nLATEST UPDATES FROM DOORSSCHOOL:\n${liveKnowledge}` : "";
+    
+    const finalSystemPrompt = `${activePrompt}${knowledgeSuffix}\n\n${systemNote}`;
+
 
     try {
         console.log(`Calling API for ${userId} (Prompt size: ${isFirstMessage ? 'FULL' : 'TRIMMED'})...`);
@@ -203,7 +212,19 @@ async function getRkResponse(userId, userMessage) {
         // Background extraction & summary update
         updateMemoryAndSummary(userId, userMessage, responseText).catch(console.error);
 
+        // LOG CONVERSATION
+        logger.logMessage({
+            userId: userId,
+            userName: session.NAME || "Unknown",
+            userMessage: userMessage,
+            botResponse: responseText,
+            phase: session.STAGE || 1,
+            interestLevel: session.INTEREST_LEVEL || "Medium",
+            sessionId: userId
+        });
+
         return responseText;
+
 
     } catch (err) {
         console.error('All APIs failed:', err);
