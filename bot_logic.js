@@ -120,7 +120,7 @@ Connect -> Discover -> Educate -> Seed -> Invite (Webinar) -> Close.
 const COMPRESSED_PROMPT = `CRITICAL: Your name is Rk. User is NOT Rk. You are CEO of Doorsschool. Warm, direct, max 3 sentences. Track: NAME, PROFESSION, PAIN, GOAL, STAGE, INTEREST. Webinar: Recorded demo. Link: ${WEBINAR_LINK}. Rule: Drop link directly. NEVER say live, today, tonight, email, sent later.`;
 
 async function getRkResponse(userId, userMessage) {
-    const session = memoryManager.getOrCreateSession(userId);
+    const session = await memoryManager.getOrCreateSession(userId);
     const normalizedMsg = userMessage.toLowerCase().trim();
 
     // Optimization 3 & 4: Cache & Intent Check
@@ -131,14 +131,14 @@ async function getRkResponse(userId, userMessage) {
         if (data.keywords.some(k => normalizedMsg.includes(k))) {
             const resp = data.template();
             responseCache.set(normalizedMsg, resp);
-            memoryManager.addMessage(userId, 'user', userMessage);
-            memoryManager.addMessage(userId, 'rk', resp);
+            await memoryManager.addMessage(userId, 'user', userMessage);
+            await memoryManager.addMessage(userId, 'rk', resp);
             return resp;
         }
     }
 
     // Optimization 6: History Compression Trigger
-    const context = memoryManager.getCompressedContext(userId);
+    const context = await memoryManager.getCompressedContext(userId);
     const systemNote = `Context Summary: ${context.summary}. User is at Stage: ${context.stage}.`;
 
     // Optimization 2: Dynamic System Prompt
@@ -146,7 +146,7 @@ async function getRkResponse(userId, userMessage) {
     const activePrompt = isFirstMessage ? FULL_SYSTEM_PROMPT : COMPRESSED_PROMPT;
     
     // INJECT KNOWLEDGE BASE
-    const liveKnowledge = knowledgeBase.getLiveContext();
+    const liveKnowledge = await knowledgeBase.getLiveContext();
     const knowledgeSuffix = liveKnowledge ? `\n\nLATEST UPDATES FROM DOORSSCHOOL:\n${liveKnowledge}` : "";
     
     const finalSystemPrompt = `${activePrompt}${knowledgeSuffix}\n\n${systemNote}`;
@@ -206,14 +206,14 @@ async function getRkResponse(userId, userMessage) {
         }
 
         // Update memory
-        memoryManager.addMessage(userId, 'user', userMessage);
-        memoryManager.addMessage(userId, 'rk', responseText);
+        await memoryManager.addMessage(userId, 'user', userMessage);
+        await memoryManager.addMessage(userId, 'rk', responseText);
         
         // Background extraction & summary update
         updateMemoryAndSummary(userId, userMessage, responseText).catch(console.error);
 
         // LOG CONVERSATION
-        logger.logMessage({
+        await logger.logMessage({
             userId: userId,
             userName: session.NAME || "Unknown",
             userMessage: userMessage,
@@ -233,7 +233,7 @@ async function getRkResponse(userId, userMessage) {
 }
 
 async function updateMemoryAndSummary(userId, userMsg, rkMsg) {
-    const session = memoryManager.getOrCreateSession(userId);
+    const session = await memoryManager.getOrCreateSession(userId);
     const recentHistory = session.history.slice(-4).map(m => `${m.role}: ${m.content}`).join('\n');
     
     const extractionPrompt = `
@@ -251,7 +251,7 @@ async function updateMemoryAndSummary(userId, userMsg, rkMsg) {
             response_format: { type: "json_object" }
         });
         const updates = JSON.parse(result.choices[0].message.content);
-        memoryManager.updateSession(userId, updates);
+        await memoryManager.updateSession(userId, updates);
     } catch (e) {
         // Silent failure or retry with Gemini
     }

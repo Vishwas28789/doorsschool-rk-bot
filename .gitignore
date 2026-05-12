@@ -3,3 +3,5 @@ node_modules/
 sessions.json
 .vscode/
 .DS_Store
+conversations.json
+knowledge.json

@@ -10,6 +10,11 @@ const sandbox = require('./sandbox');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
+const connectDB = require('./db');
+
+dotenv.config();
+connectDB();
 
 
 
@@ -30,6 +35,10 @@ app.use(session({
     secret: process.env.SESSION_SECRET || 'rk-admin-secret',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 24 * 60 * 60
+    }),
     cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 hours
 }));
 
@@ -69,8 +78,8 @@ app.get('/admin', (req, res) => {
 
 
 
-app.post('/reset', (req, res) => {
-    memoryManager.clearSession(TEST_USER);
+app.post('/reset', async (req, res) => {
+    await memoryManager.clearSession(TEST_USER);
     res.json({ success: true });
 });
 
@@ -84,26 +93,28 @@ io.on('connection', (socket) => {
     console.log(`User connected to UI: ${socket.id}`);
 
     // Send existing history to the client
-    const session = memoryManager.getOrCreateSession(TEST_USER);
-    socket.emit('history', session.history);
+    const sessionPromise = memoryManager.getOrCreateSession(TEST_USER);
+    sessionPromise.then(session => {
+        socket.emit('history', session.history);
 
-    // TASK 4: GREETING FIX for brand new sessions
-    if (session.history.length === 0) {
-        setTimeout(() => {
-            // Check if socket is still active
-            if (!activeSockets.has(socket.id)) return;
+        // TASK 4: GREETING FIX for brand new sessions
+        if (session.history.length === 0) {
+            setTimeout(async () => {
+                // Check if socket is still active
+                if (!activeSockets.has(socket.id)) return;
 
-            const greeting = "Hey, glad you reached out. I'm Rk — started Doorsschool after watching too many sharp people stay broke because nobody taught them how to actually sell or build a real business system. What's the one thing holding you back right now — income, clients, skills, or just feeling stuck?";
-            
-            socket.emit('rk_response', {
-                content: greeting,
-                timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-            });
+                const greeting = "Hey, glad you reached out. I'm Rk — started Doorsschool after watching too many sharp people stay broke because nobody taught them how to actually sell or build a real business system. What's the one thing holding you back right now — income, clients, skills, or just feeling stuck?";
+                
+                socket.emit('rk_response', {
+                    content: greeting,
+                    timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                });
 
-            // Persist the greeting in memory so it's not sent again
-            memoryManager.addMessage(TEST_USER, 'rk', greeting);
-        }, 1500);
-    }
+                // Persist the greeting in memory so it's not sent again
+                await memoryManager.addMessage(TEST_USER, 'rk', greeting);
+            }, 1500);
+        }
+    });
 
     socket.on('message', async (msg) => {
         // BUG 2 Fix: Process only if socket is active and message is not duplicate
@@ -157,38 +168,38 @@ io.on('connection', (socket) => {
 
 // --- ADMIN API ROUTES ---
 
-app.get('/admin/api/stats', (req, res) => {
-
-    res.json(logger.getStats());
+app.get('/admin/api/stats', async (req, res) => {
+    res.json(await logger.getStats());
 });
 
 // GET /admin/api/conversations
-app.get('/admin/api/conversations', (req, res) => {
-    res.json(logger.getConversations().reverse()); // Newest first
+app.get('/admin/api/conversations', async (req, res) => {
+    const convs = await logger.getConversations();
+    res.json(convs.reverse()); // Newest first
 });
 
 // GET /admin/api/knowledge
-app.get('/admin/api/knowledge', (req, res) => {
-    res.json(knowledgeBase.getEntries());
+app.get('/admin/api/knowledge', async (req, res) => {
+    res.json(await knowledgeBase.getEntries());
 });
 
 // POST /admin/api/knowledge/add
-app.post('/admin/api/knowledge/add', (req, res) => {
+app.post('/admin/api/knowledge/add', async (req, res) => {
     const { tag, content } = req.body;
-    const entry = knowledgeBase.addEntry(tag, content);
+    const entry = await knowledgeBase.addEntry(tag, content);
     res.json(entry);
 });
 
 // POST /admin/api/knowledge/deploy
-app.post('/admin/api/knowledge/deploy', (req, res) => {
+app.post('/admin/api/knowledge/deploy', async (req, res) => {
     const { id } = req.body;
-    const entry = knowledgeBase.deployEntry(id);
+    const entry = await knowledgeBase.deployEntry(id);
     res.json(entry);
 });
 
 // DELETE /admin/api/knowledge/:id
-app.delete('/admin/api/knowledge/:id', (req, res) => {
-    knowledgeBase.deleteEntry(req.params.id);
+app.delete('/admin/api/knowledge/:id', async (req, res) => {
+    await knowledgeBase.deleteEntry(req.params.id);
     res.json({ success: true });
 });
 

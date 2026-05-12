@@ -14,11 +14,12 @@ async function sandboxChat(message, type = 'staging') {
     // Get knowledge
     let knowledge = "";
     if (type === 'staging') {
-        const staging = knowledgeBase.getEntries("staging").map(e => `[${e.tag}] ${e.content}`).join('\n');
-        const live = knowledgeBase.getLiveContext();
+        const stagingEntries = await knowledgeBase.getEntries("staging");
+        const staging = stagingEntries.map(e => `[${e.tag}] ${e.content}`).join('\n');
+        const live = await knowledgeBase.getLiveContext();
         knowledge = (live + "\n" + staging).trim();
     } else {
-        knowledge = knowledgeBase.getLiveContext();
+        knowledge = await knowledgeBase.getLiveContext();
     }
 
     const systemPrompt = BASE_PROMPT + (knowledge ? `\n\nLATEST UPDATES FROM DOORSSCHOOL:\n${knowledge}` : "");
