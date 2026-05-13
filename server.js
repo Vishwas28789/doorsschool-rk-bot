@@ -24,19 +24,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // SESSION SETUP
+let sessionStore = undefined;
+try {
+  if (process.env.MONGODB_URI && 
+      process.env.MONGODB_URI !== 'placeholder' &&
+      !process.env.MONGODB_URI.includes('<')) {
+    sessionStore = MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      ttl: 24 * 60 * 60,
+      touchAfter: 24 * 3600
+    });
+    console.log('✅ Session store ready');
+  }
+} catch(err) {
+  console.log('⚠️ Session store failed:', 
+    err.message);
+}
+
 app.use(require('express-session')({
   secret: process.env.SESSION_SECRET || 
     'rk-secret-fallback',
   resave: false,
   saveUninitialized: false,
-  store: (process.env.MONGODB_URI && process.env.MONGODB_URI !== 'placeholder')
-    ? MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI,
-        ttl: 24 * 60 * 60,
-        touchAfter: 24 * 3600,
-        crypto: { secret: false }
-      })
-    : undefined,
+  store: sessionStore,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
