@@ -8,7 +8,7 @@ const sandbox = require('./sandbox');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+const MongoStore = require('connect-mongo')(session);
 const connectDB = require('./db');
 
 dotenv.config();
@@ -26,18 +26,17 @@ app.use(express.urlencoded({ extended: true }));
 // SESSION SETUP
 let sessionStore = undefined;
 try {
-  if (process.env.MONGODB_URI && 
-      process.env.MONGODB_URI !== 'placeholder' &&
-      !process.env.MONGODB_URI.includes('<')) {
-    sessionStore = MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      ttl: 24 * 60 * 60,
-      touchAfter: 24 * 3600
+  const uri = process.env.MONGODB_URI;
+  if (uri && uri !== 'placeholder' && 
+      !uri.includes('<')) {
+    sessionStore = new MongoStore({ 
+      url: uri,
+      ttl: 24 * 60 * 60
     });
     console.log('✅ Session store ready');
   }
 } catch(err) {
-  console.log('⚠️ Session store failed:', 
+  console.log('⚠️ Session store skipped:', 
     err.message);
 }
 
