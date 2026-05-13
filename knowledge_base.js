@@ -12,6 +12,10 @@ async function getEntries(status) {
 }
 
 async function deployEntry(id) {
+  const mongoose = require('mongoose');
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error('Invalid ID format');
+  }
   return await Knowledge.findByIdAndUpdate(
     id, { status: 'live' }, { new: true }
   );

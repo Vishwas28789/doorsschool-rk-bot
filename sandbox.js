@@ -56,7 +56,12 @@ function resetSandbox() {
     sandboxHistoryLive = [];
 }
 
+async function sandboxChatLive(message) {
+    return await sandboxChat(message, 'live');
+}
+
 module.exports = {
     sandboxChat,
+    sandboxChatLive,
     resetSandbox
 };

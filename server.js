@@ -208,10 +208,31 @@ app.post('/admin/api/knowledge/add', async (req, res) => {
 });
 
 // POST /admin/api/knowledge/deploy
-app.post('/admin/api/knowledge/deploy', async (req, res) => {
+app.post('/admin/api/knowledge/deploy', 
+  requireAdmin, async (req, res) => {
+  try {
     const { id } = req.body;
-    const entry = await knowledgeBase.deployEntry(id);
-    res.json(entry);
+    if (!id) {
+      return res.json({ 
+        success: false, 
+        error: 'No ID provided' 
+      });
+    }
+    const entry = await knowledgeBase
+      .deployEntry(id);
+    if (!entry) {
+      return res.json({ 
+        success: false, 
+        error: 'Entry not found' 
+      });
+    }
+    res.json({ success: true, entry });
+  } catch(err) {
+    res.json({ 
+      success: false, 
+      error: err.message 
+    });
+  }
 });
 
 // DELETE /admin/api/knowledge/:id
@@ -228,10 +249,20 @@ app.post('/admin/api/sandbox/staging', async (req, res) => {
 });
 
 // POST /admin/api/sandbox/live
-app.post('/admin/api/sandbox/live', async (req, res) => {
+app.post('/admin/api/sandbox/live', 
+  requireAdmin, async (req, res) => {
+  try {
     const { message } = req.body;
-    const response = await sandbox.sandboxChat(message, 'live');
-    res.json({ response });
+    const response = await sandbox
+      .sandboxChatLive(message);
+    res.json({ success: true, response });
+  } catch(err) {
+    res.json({ 
+      success: false, 
+      error: err.message,
+      response: 'Error: ' + err.message
+    });
+  }
 });
 
 // POST /admin/api/sandbox/reset
