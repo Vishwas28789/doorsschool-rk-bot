@@ -8,7 +8,7 @@ const sandbox = require('./sandbox');
 const fs = require('fs');
 const dotenv = require('dotenv');
 const session = require('express-session');
-const MongoStore = require('connect-mongo')(session);
+const MongoDBStore = require('connect-mongodb-session')(session);
 const connectDB = require('./db');
 
 dotenv.config();
@@ -25,22 +25,32 @@ app.use(express.urlencoded({ extended: true }));
 
 // SESSION SETUP
 let sessionStore = undefined;
-try {
-  const uri = process.env.MONGODB_URI;
-  if (uri && uri !== 'placeholder' && 
-      !uri.includes('<')) {
-    sessionStore = new MongoStore({ 
-      url: uri,
-      ttl: 24 * 60 * 60
+const mongoUri = process.env.MONGODB_URI;
+
+if (mongoUri && mongoUri !== 'placeholder' && 
+    !mongoUri.includes('<')) {
+  try {
+    sessionStore = new MongoDBStore({
+      uri: mongoUri,
+      collection: 'sessions',
+      expires: 1000 * 60 * 60 * 24,
+      connectionOptions: {
+        serverSelectionTimeoutMS: 10000
+      }
     });
-    console.log('✅ Session store ready');
+    sessionStore.on('error', (err) => {
+      console.log('Session store error:', 
+        err.message);
+    });
+    console.log('✅ Session store initialized');
+  } catch(err) {
+    console.log('⚠️ Session store failed:', 
+      err.message);
+    sessionStore = undefined;
   }
-} catch(err) {
-  console.log('⚠️ Session store skipped:', 
-    err.message);
 }
 
-app.use(require('express-session')({
+app.use(session({
   secret: process.env.SESSION_SECRET || 
     'rk-secret-fallback',
   resave: false,
