@@ -312,7 +312,7 @@
         <div class="header-left">
             <div class="avatar">RK</div>
             <div>
-                <h1 style="font-size: 18px;">Doorsschool Bot — Admin Console</h1>
+                <h1 style="font-size: 18px;">Doers School Bot — Admin Console</h1>
                 <div style="font-size: 12px; opacity: 0.9;">
                     <span class="status-dot"></span> Live | <span style="opacity: 0.7;">Admin Console — not visible to users</span>
                 </div>
@@ -321,6 +321,17 @@
 
         <div class="header-right">
             <button class="btn btn-outline" style="color: white; border-color: white;" onclick="location.reload()">Refresh Data</button>
+            <button onclick="logout()" 
+              style="background:transparent;
+              border:1px solid white;color:white;
+              padding:6px 16px;border-radius:6px;
+              margin-left:10px;cursor:pointer;"
+              onmouseover="this.style.background=
+                'rgba(255,255,255,0.15)'"
+              onmouseout="this.style.background=
+                'transparent'">
+              Logout
+            </button>
         </div>
     </header>
 
@@ -740,6 +751,11 @@
                 alert(`${key} updated successfully!`);
                 if (key === 'ADMIN_PASSWORD') document.getElementById('setting-password').value = '';
             }
+        }
+
+        async function logout() {
+          await fetch('/admin/logout', { method: 'GET' });
+          window.location.href = '/admin/login';
         }
 
         // Initial fetch

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: doorsschool-rk-bot
+    name: doers-school-rk-bot
     env: node
     buildCommand: npm install
     startCommand: node server.js

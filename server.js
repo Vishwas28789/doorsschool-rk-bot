@@ -82,8 +82,10 @@ app.post('/admin/login', (req, res) => {
 });
 
 app.get('/admin/logout', (req, res) => {
-    req.session.destroy();
+  req.session.destroy((err) => {
+    if (err) console.log('Logout error:', err);
     res.redirect('/admin/login');
+  });
 });
 
 // APPLY PROTECTION TO ALL /admin ROUTES (except login)
@@ -120,7 +122,7 @@ io.on('connection', (socket) => {
                 // Check if socket is still active
                 if (!activeSockets.has(socket.id)) return;
 
-                const greeting = "Hey, glad you reached out. I'm Rk — started Doorsschool after watching too many sharp people stay broke because nobody taught them how to actually sell or build a real business system. What's the one thing holding you back right now — income, clients, skills, or just feeling stuck?";
+                const greeting = "Hey, glad you reached out. I'm Rk — started Doers School after watching too many sharp people stay broke because nobody taught them how to actually sell or build a real business system. What's the one thing holding you back right now — income, clients, skills, or just feeling stuck?";
                 
                 socket.emit('rk_response', {
                     content: greeting,

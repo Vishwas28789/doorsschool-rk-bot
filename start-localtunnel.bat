@@ -1,5 +1,5 @@
 @echo off
-echo Starting Doorsschool RK Bot...
+echo Starting Doers School RK Bot...
 start cmd /k "node server.js"
 timeout /t 3
-lt --port 3000 --subdomain doorsschool-rk
+lt --port 3000 --subdomain doers-school-rk

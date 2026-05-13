@@ -6,7 +6,7 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 let sandboxHistoryStaging = [];
 let sandboxHistoryLive = [];
 
-const BASE_PROMPT = `CRITICAL: Your name is Rk. User is NOT Rk. You are CEO of Doorsschool. Warm, direct, max 3 sentences. Webinar: Recorded demo. Link: ${process.env.WEBINAR_LINK || "Link soon"}. Rule: Drop link directly. NEVER say live, today, tonight, email, sent later.`;
+const BASE_PROMPT = `CRITICAL: Your name is Rk. User is NOT Rk. You are CEO of Doers School. Warm, direct, max 3 sentences. Webinar: Recorded demo. Link: ${process.env.WEBINAR_LINK || "Link soon"}. Rule: Drop link directly. NEVER say live, today, tonight, email, sent later.`;
 
 async function sandboxChat(message, type = 'staging') {
     const history = type === 'staging' ? sandboxHistoryStaging : sandboxHistoryLive;
@@ -22,7 +22,7 @@ async function sandboxChat(message, type = 'staging') {
         knowledge = await knowledgeBase.getLiveContext();
     }
 
-    const systemPrompt = BASE_PROMPT + (knowledge ? `\n\nLATEST UPDATES FROM DOORSSCHOOL:\n${knowledge}` : "");
+    const systemPrompt = BASE_PROMPT + (knowledge ? `\n\nLATEST UPDATES FROM DOERS SCHOOL:\n${knowledge}` : "");
 
     const messages = [
         { role: 'system', content: systemPrompt },
