@@ -1,6 +1,4 @@
 const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
 const path = require('path');
 const { getRkResponse } = require('./bot_logic');
 const memoryManager = require('./memory_manager');
@@ -16,8 +14,8 @@ const connectDB = require('./db');
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server);
+const server = require('http').createServer(app);
+const io = require('socket.io')(server);
 
 const TEST_USER = "test_user_001";
 
@@ -26,19 +24,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // SESSION SETUP
-const mongoStore = process.env.MONGODB_URI 
-  ? MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI,
-      ttl: 24 * 60 * 60,
-      touchAfter: 24 * 3600
-    })
-  : null;
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'rk-secret-fallback',
+app.use(require('express-session')({
+  secret: process.env.SESSION_SECRET || 
+    'rk-secret-fallback',
   resave: false,
   saveUninitialized: false,
-  store: mongoStore || undefined,
+  store: (process.env.MONGODB_URI && process.env.MONGODB_URI !== 'placeholder')
+    ? MongoStore.create({
+        mongoUrl: process.env.MONGODB_URI,
+        ttl: 24 * 60 * 60,
+        touchAfter: 24 * 3600,
+        crypto: { secret: false }
+      })
+    : undefined,
   cookie: { maxAge: 24 * 60 * 60 * 1000 }
 }));
 
@@ -252,16 +250,18 @@ app.post('/admin/api/settings/update', (req, res) => {
 });
 
 const startServer = async () => {
-  try {
-    await connectDB();
-    console.log('MongoDB connected successfully');
-  } catch (err) {
-    console.log('MongoDB failed, running without DB:', err.message);
+  const dbConnected = await connectDB();
+  if (dbConnected) {
+    console.log('✅ Database ready');
+  } else {
+    console.log('⚠️ Running without database - sessions will not persist');
   }
   
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`WhatsApp Test UI running at http://localhost:${PORT}`);
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(
+      `✅ Server running on port ${PORT}`
+    );
   });
 };
 
